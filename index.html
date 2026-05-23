@@ -1,55 +1,796 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-  <meta charset="utf-8">
-  <title>Elezioni Comunali SBdT 2021 – Mappe</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elezioni Comunali 2021 – San Benedetto del Tronto</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; max-width: 700px; margin: 3em auto; padding: 0 1em; }
-    h1   { color: #2c3e50; }
-    h2   { color: #34495e; margin-top: 2em; }
-    ul   { line-height: 2; }
-    a    { color: #2980b9; }
-    .note { background: #f0f4f8; border-left: 4px solid #3498db;
-            padding: 0.6em 1em; margin: 1em 0; font-size: 0.95em; }
-    table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-    th, td { border: 1px solid #ddd; padding: 0.5em 0.8em; text-align: left; }
-    th { background: #eee; }
+    :root {
+      --bg: #ffffff;
+      --surface: #f8f9fa;
+      --border: #e9ecef;
+      --text: #212529;
+      --muted: #6c757d;
+      --success: #198754;
+      --header-bg: #1a2a1a;
+      --header-text: #ffffff;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    /* ── ITALIAN TRICOLOR ── */
+    .tricolor {
+      height: 4px;
+      background: linear-gradient(to right, #009246 33.33%, #ffffff 33.33% 66.66%, #ce2b37 66.66%);
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 18px 20px 16px;
+    }
+    .header-inner {
+      max-width: 820px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .header-eyebrow {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 6px;
+    }
+    header h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    @media (max-width: 600px) { header h1 { font-size: 1.6rem; } }
+    header h2 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-top: 4px;
+      color: rgba(255,255,255,0.75);
+      border-top: 1px solid rgba(255,255,255,0.12);
+      padding-top: 6px;
+    }
+    header p.tagline {
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: rgba(255,255,255,0.42);
+      margin-top: 5px;
+      letter-spacing: 0.3px;
+    }
+
+    /* DEFINITIVO badge */
+    .final-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #4caf50;
+    }
+    .final-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #4caf50;
+    }
+    @media (max-width: 600px) { .final-badge { display: none; } }
+
+    /* ── STICKY STACK ── */
+    .sticky-stack {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    /* ── STATUS STRIP ── */
+    .status-strip {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+    }
+    .status-inner { max-width: 820px; margin: 0 auto; }
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .status-item {
+      font-size: 0.78rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .status-item strong {
+      color: var(--text);
+      font-weight: 800;
+      font-size: 0.88rem;
+    }
+    @media (max-width: 600px) {
+      .status-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
+      .status-item { white-space: normal; }
+    }
+    .sezioni-wrap { display: flex; align-items: center; gap: 8px; }
+    .sezioni-bar-track {
+      width: 80px; height: 4px;
+      background: var(--border); border-radius: 2px; overflow: hidden;
+    }
+    .sezioni-bar-fill {
+      height: 100%; background: var(--success); border-radius: 2px;
+    }
+
+    /* ── ERROR BANNER ── */
+    .error-banner {
+      background: #f8d7da; color: #842029;
+      border-bottom: 1px solid #f5c2c7;
+      padding: 10px 20px; font-size: 0.82rem;
+      font-weight: 500; text-align: center; display: none;
+    }
+    .error-banner.visible { display: block; }
+
+    /* ── TAB NAV ── */
+    .tab-nav {
+      background: var(--bg);
+      border-bottom: 2px solid var(--border);
+      padding: 0 20px;
+    }
+    .tab-nav-inner {
+      max-width: 820px; margin: 0 auto; display: flex;
+    }
+    .tab-btn {
+      background: none; border: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      padding: 14px 22px 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem; font-weight: 600;
+      letter-spacing: 0.8px; color: var(--muted);
+      cursor: pointer; transition: color 0.18s, border-color 0.18s;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--text); border-bottom-color: var(--text); }
+
+    /* ── MAIN ── */
+    .main {
+      max-width: 820px; margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── AFFLUENZA PANEL ── */
+    .affluenza-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 20px 24px; margin-bottom: 20px;
+      display: grid; grid-template-columns: auto 1fr auto;
+      gap: 20px; align-items: center;
+    }
+    .afflu-pct-block { text-align: center; }
+    .afflu-pct {
+      font-size: 3rem; font-weight: 800; line-height: 1;
+      color: var(--text); letter-spacing: -0.03em;
+    }
+    .afflu-label {
+      font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.5px; color: var(--muted); margin-top: 4px;
+    }
+    .afflu-bar-block { display: flex; flex-direction: column; gap: 8px; }
+    .afflu-bar-track {
+      height: 10px; background: var(--border); border-radius: 5px; overflow: hidden;
+    }
+    .afflu-bar-fill {
+      height: 100%; background: #2e7d32; border-radius: 5px;
+    }
+    .afflu-totals { font-size: 0.78rem; color: var(--muted); }
+    .afflu-totals strong { color: var(--text); }
+    .afflu-gender-block { display: flex; flex-direction: column; gap: 6px; min-width: 130px; }
+    .afflu-gender-row { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; }
+    .afflu-gender-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .afflu-gender-label { color: var(--muted); width: 12px; }
+    .afflu-gender-bar-track {
+      flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;
+    }
+    .afflu-gender-bar-fill { height: 100%; border-radius: 3px; }
+    .afflu-gender-pct { font-weight: 700; color: var(--text); min-width: 36px; text-align: right; }
+    @media (max-width: 600px) {
+      .affluenza-panel { grid-template-columns: auto 1fr; }
+      .afflu-gender-block { grid-column: 1/-1; flex-direction: row; gap: 16px; }
+    }
+
+    /* ── BALLOTTAGGIO BANNER ── */
+    .ballottaggio-banner {
+      background: #fff8e1; border: 1px solid #ffe082;
+      border-radius: 8px; padding: 14px 18px;
+      margin-bottom: 20px; font-size: 0.85rem;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .ballottaggio-banner .icon { font-size: 1.3rem; flex-shrink: 0; }
+    .ballottaggio-banner strong { color: #e65100; }
+
+    /* ── SINDACO CARDS ── */
+    .candidates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    @media (max-width: 500px) {
+      .candidates-grid { grid-template-columns: 1fr; }
+    }
+
+    .candidate-card {
+      border: 1px solid var(--border); border-radius: 10px;
+      overflow: hidden; background: var(--bg);
+      transition: box-shadow 0.2s;
+    }
+    .candidate-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
+    .card-top-stripe { height: 12px; }
+    .card-body { padding: 20px; }
+    .card-name {
+      font-size: 1.15rem; font-weight: 800; line-height: 1.2;
+      overflow: hidden; display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      color: var(--text); margin-bottom: 4px; letter-spacing: -0.02em;
+    }
+    .card-subtitle { font-size: 0.7rem; color: var(--muted); margin-bottom: 10px; }
+    .coalition-pill {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase; color: #fff; margin-bottom: 14px;
+    }
+    .card-pct {
+      font-size: clamp(2.4rem, 4vw, 3.2rem); font-weight: 800; line-height: 1;
+      margin-bottom: 10px; letter-spacing: -0.03em;
+    }
+    .card-bar-track {
+      height: 8px; background: var(--border); border-radius: 4px;
+      overflow: hidden; margin-bottom: 12px;
+    }
+    .card-bar-fill { height: 100%; border-radius: 4px; }
+    .card-votes {
+      font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 12px;
+    }
+    .card-votes span { font-size: 0.76rem; font-weight: 500; color: var(--muted); }
+    .card-lists { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+    .list-pill {
+      font-size: 0.63rem; font-weight: 600; padding: 3px 9px;
+      border-radius: 4px; white-space: normal; word-break: break-word;
+    }
+
+    /* ── LISTE TAB ── */
+    .coalition-section { margin-bottom: 28px; }
+    .coalition-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-radius: 6px 6px 0 0; color: #fff; gap: 8px;
+    }
+    .coalition-header-left { display: flex; flex-direction: column; }
+    .coalition-header-name {
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.5px;
+      opacity: 0.85; text-transform: uppercase;
+    }
+    .coalition-header-cand { font-size: 1.0rem; font-weight: 800; }
+    .coalition-header-right { text-align: right; flex-shrink: 0; }
+    .coalition-header-votes { font-size: 1.1rem; font-weight: 800; }
+    .coalition-header-pct { font-size: 0.75rem; opacity: 0.85; }
+    .liste-table {
+      border: 1px solid var(--border); border-top: none;
+      border-radius: 0 0 6px 6px; overflow: hidden;
+    }
+    .lista-row {
+      display: grid; grid-template-columns: 1fr 120px 70px 52px;
+      align-items: center; gap: 10px; padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .lista-row:last-child { border-bottom: none; }
+    .lista-row:hover { background: var(--surface); }
+    .lista-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+    .lista-bar-track {
+      height: 5px; background: var(--border); border-radius: 3px; overflow: hidden;
+    }
+    .lista-bar-fill { height: 100%; border-radius: 3px; }
+    .lista-votes { font-size: 0.82rem; font-weight: 700; text-align: right; }
+    .lista-pct { font-size: 0.78rem; font-weight: 600; color: var(--muted); text-align: right; }
+    @media (max-width: 500px) {
+      .lista-row { grid-template-columns: 1fr 80px 60px 46px; gap: 6px; }
+    }
+
+    /* ── CONSIGLIERI TAB ── */
+    .accordion-item {
+      border: 1px solid var(--border); border-radius: 6px;
+      overflow: hidden; margin-bottom: 8px;
+    }
+    .accordion-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 16px; background: var(--surface);
+      cursor: pointer; user-select: none; gap: 10px; transition: background 0.15s;
+    }
+    .accordion-header:hover { background: var(--border); }
+    .accordion-header-left { display: flex; align-items: center; gap: 10px; }
+    .coalition-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .accordion-list-name { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .accordion-header-right { display: flex; align-items: center; gap: 10px; }
+    .accordion-votes { font-size: 0.85rem; font-weight: 700; color: var(--text); }
+    .accordion-chevron { font-size: 0.7rem; color: var(--muted); transition: transform 0.2s; }
+    .accordion-item.open .accordion-chevron { transform: rotate(180deg); }
+    .accordion-body { display: none; border-top: 1px solid var(--border); }
+    .accordion-item.open .accordion-body { display: block; }
+    .candi-table { width: 100%; border-collapse: collapse; }
+    .candi-table th {
+      font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.4px; color: var(--muted); padding: 8px 14px;
+      text-align: left; background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .candi-table th:nth-child(3), .candi-table th:nth-child(4) { text-align: right; }
+    .candi-table td {
+      font-size: 0.82rem; padding: 8px 14px;
+      border-bottom: 1px solid var(--border); color: var(--text);
+    }
+    .candi-table tr:last-child td { border-bottom: none; }
+    .candi-table td:nth-child(1) {
+      color: var(--muted); font-weight: 600; font-size: 0.75rem; width: 36px;
+    }
+    .candi-table td:nth-child(3), .candi-table td:nth-child(4) { text-align: right; }
+    .candi-table td:nth-child(3) { font-weight: 700; }
+    .candi-table td:nth-child(4) { color: var(--muted); font-size: 0.75rem; }
+    .candi-table tbody tr:hover { background: var(--surface); }
+
+    /* ── LOADING ── */
+    .loading-overlay {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 12px; padding: 60px 20px;
+      color: var(--muted); font-size: 0.88rem;
+    }
+    .spinner {
+      width: 32px; height: 32px; border: 3px solid var(--border);
+      border-top-color: #e67e22; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center; padding: 20px; font-size: 0.72rem;
+      color: var(--muted); border-top: 1px solid var(--border);
+      max-width: 820px; margin: 0 auto;
+    }
   </style>
 </head>
 <body>
-<h1>🗳️ Elezioni Comunali – San Benedetto del Tronto 2021</h1>
-<p>Dati validati all'Ufficio Centrale (3–4 ottobre 2021) · 43 sezioni · 24.070 votanti</p>
 
-<div class="note">
-  Fonte dati: <a href="https://elezioni.comunesbt.it" target="_blank">elezioni.comunesbt.it</a>
-  (AMMINISTRATIVE 2021 – DATI VALIDATI, cdele=3 macro=S3)
+<div class="tricolor"></div>
+
+<header>
+  <div class="header-inner">
+    <div class="final-badge"><span class="final-dot"></span>DATI DEFINITIVI</div>
+    <p class="header-eyebrow">Comune di San Benedetto del Tronto &middot; 3–4 ottobre 2021</p>
+    <h1>Elezioni Comunali 2021</h1>
+    <h2>San Benedetto del Tronto</h2>
+    <p class="tagline">Dati validati all'Ufficio Centrale &middot; primo turno</p>
+  </div>
+</header>
+
+<div class="sticky-stack">
+  <div class="status-strip">
+    <div class="status-inner">
+      <div class="status-row" id="status-row">
+        <div class="status-item sezioni-wrap">
+          <span>Sezioni: <strong id="s-sezioni">—</strong></span>
+          <div class="sezioni-bar-track">
+            <div class="sezioni-bar-fill" id="s-sezioni-bar" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="status-item">Votanti: <strong id="s-votanti">—</strong></div>
+        <div class="status-item">Iscritti: <strong id="s-iscritti">—</strong></div>
+        <div class="status-item">Voti validi: <strong id="s-validi">—</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="error-banner" id="error-banner">
+    <span id="error-text">⚠️ Errore nel caricamento dati</span>
+  </div>
+
+  <nav class="tab-nav" role="tablist">
+    <div class="tab-nav-inner">
+      <button class="tab-btn active" id="btn-sindaco"     onclick="switchTab('sindaco')">SINDACO</button>
+      <button class="tab-btn"        id="btn-liste"       onclick="switchTab('liste')">LISTE</button>
+      <button class="tab-btn"        id="btn-consiglieri" onclick="switchTab('consiglieri')">CONSIGLIERI</button>
+      <button class="tab-btn"        id="btn-mappe"       onclick="switchTab('mappe')">MAPPE</button>
+    </div>
+  </nav>
 </div>
 
-<h2>Risultati complessivi</h2>
-<table>
-  <tr><th>#</th><th>Candidato</th><th>Voti</th><th>%</th></tr>
-  <tr><td>4</td><td><strong>Piunti Pasqualino</strong> 🥇</td><td>9.706</td><td>41,5%</td></tr>
-  <tr><td>1</td><td>Spazzafumo Antonio</td><td>4.452</td><td>19,0%</td></tr>
-  <tr><td>3</td><td>Canducci Paolo</td><td>3.794</td><td>16,2%</td></tr>
-  <tr><td>2</td><td>Bottiglieri Aurora</td><td>3.679</td><td>15,7%</td></tr>
-  <tr><td>5</td><td>Angelini Serafino</td><td>1.724</td><td>7,4%</td></tr>
-</table>
+<main class="main">
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <span>Caricamento dati…</span>
+  </div>
 
-<h2>Mappe interattive</h2>
-<ul>
-  <li><a href="map_sezioni.html">Sezioni elettorali per collegio</a></li>
-  <li><a href="map_vincente.html">Candidato vincente per sezione</a></li>
-  <li><a href="map_percentuali.html">Percentuali candidati per sede</a></li>
-  <li><a href="map_voti.html">Voti assoluti per candidato e sede</a></li>
-</ul>
+  <div id="affluenza-panel"></div>
+  <div id="tab-sindaco"     class="tab-panel"></div>
+  <div id="tab-liste"       class="tab-panel"></div>
+  <div id="tab-consiglieri" class="tab-panel"></div>
+  <div id="tab-mappe"       class="tab-panel">
+    <ul style="line-height:2.2; font-size:0.95rem; padding-left:1.2em;">
+      <li><a href="map_vincente.html">Candidato vincente per sezione</a></li>
+      <li><a href="map_percentuali.html">Percentuali candidati per sede</a></li>
+      <li><a href="map_voti.html">Voti assoluti per candidato e sede</a></li>
+      <li><a href="map_sezioni.html">Sezioni elettorali per collegio</a></li>
+    </ul>
+  </div>
+</main>
 
-<h2>Legenda colori candidati</h2>
-<ul>
-  <li><span style="color:#3498db">■</span> Spazzafumo Antonio</li>
-  <li><span style="color:#e74c3c">■</span> Bottiglieri Aurora</li>
-  <li><span style="color:#27ae60">■</span> Canducci Paolo</li>
-  <li><span style="color:#f39c12">■</span> Piunti Pasqualino</li>
-  <li><span style="color:#8e44ad">■</span> Angelini Serafino</li>
-</ul>
+<footer>
+  Dati validati all'Ufficio Centrale &mdash; fonte: <a href="https://elezioni.comunesbt.it" target="_blank">elezioni.comunesbt.it</a>
+</footer>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const BASE  = 'https://raw.githubusercontent.com/gjrichter/elezioni-sbt-2021/main/data/';
+const FILES = ['meta.json','totale_raggrup.json','totale_liste.json','totale_candidati.json'];
+
+// Candidati 2021 (indice raggruppamento)
+const CAND_COLORS = {
+  1: '#2c7be5',   // Spazzafumo  – blu civico
+  2: '#c0392b',   // Bottiglieri – rosso centrosinistra
+  3: '#27ae60',   // Canducci    – verde progressisti
+  4: '#e67e22',   // Piunti      – arancio centrodestra (vincitore)
+  5: '#7d3c98',   // Angelini    – viola M5S
+};
+const CAND_BG = {
+  1: '#eef4fd', 2: '#fdf0f0', 3: '#edfbf4', 4: '#fef9f0', 5: '#f9f0fd',
+};
+const CAND_LABELS = {
+  1: 'Coalizione civica',
+  2: 'Centro-sinistra',
+  3: 'Progressisti',
+  4: 'Centro-destra',
+  5: 'M5S',
+};
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let state = { meta: null, raggrup: null, liste: null, candidati: null };
+let openAccordions = new Set([12]); // prima lista (Piunti) aperta di default
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function fmtNum(n) {
+  if (n === null || n === undefined) return '—';
+  return Number(n).toLocaleString('it-IT');
+}
+function fmtPct(v, tot) {
+  if (!tot) return '0,0%';
+  return (v / tot * 100).toFixed(1).replace('.', ',') + '%';
+}
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function prettyCity(str) {
+  if (!str) return '—';
+  const clean = str.replace(/\s*\([^)]*\)\s*$/, '').trim().toLowerCase();
+  return clean.replace(/\b\w/g, c => c.toUpperCase())
+    .replace(/\b(Del|Della|Delle|Degli|Di|Da|Dei|Dello|Sul|Sulla|In|Al|Alla|D')\b/g, w => w.toLowerCase());
+}
+
+// ── FETCH ────────────────────────────────────────────────────────────────────
+async function loadData() {
+  try {
+    const cb = `?_=${Date.now()}`;
+    const [meta, raggrup, liste, candidati] = await Promise.all(
+      FILES.map(f => fetch(BASE + f + cb).then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}: ${f}`);
+        return r.json();
+      }))
+    );
+    state = { meta, raggrup, liste, candidati };
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error-banner').classList.remove('visible');
+    render();
+  } catch(err) {
+    console.error(err);
+    document.getElementById('error-text').textContent = '⚠️ ' + err.message;
+    document.getElementById('error-banner').classList.add('visible');
+    document.getElementById('loading').style.display = 'none';
+  }
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  renderStatus();
+  renderAffluenza();
+  renderSindaco();
+  renderListe();
+  renderConsiglieri();
+}
+
+function renderStatus() {
+  const m = state.meta; if (!m) return;
+  const sezioni = m.sezioni_scrutinate || 0;
+  const total   = m.sezioni_total || 43;
+  const votanti = m.votanti || 0;
+  const iscritti = m.iscritti || 0;
+  const validi = (state.raggrup?.voti?.tvotival) || 0;
+  document.getElementById('s-sezioni').textContent = `${sezioni} / ${total}`;
+  document.getElementById('s-sezioni-bar').style.width = `${(sezioni/total*100).toFixed(1)}%`;
+  document.getElementById('s-votanti').textContent  = `${fmtNum(votanti)} (${fmtPct(votanti, iscritti)})`;
+  document.getElementById('s-iscritti').textContent = fmtNum(iscritti);
+  document.getElementById('s-validi').textContent   = fmtNum(validi);
+}
+
+function renderAffluenza() {
+  const v = state.raggrup?.voti || {}; if (!v.iscri_totali) return;
+  const iscritti = v.iscri_totali || 0;
+  const votanti  = v.tvotanti     || 0;
+  const iscM = v.iscri_maschi || 0, iscF = v.iscri_femm || 0;
+  const votM = v.tvmas || 0,        votF = v.tvfem || 0;
+  const pct  = iscritti > 0 ? votanti/iscritti*100 : 0;
+  const pctM = iscM     > 0 ? votM/iscM*100 : 0;
+  const pctF = iscF     > 0 ? votF/iscF*100 : 0;
+  const f1 = n => n.toFixed(1).replace('.', ',') + '%';
+  document.getElementById('affluenza-panel').innerHTML = `
+    <div class="affluenza-panel">
+      <div class="afflu-pct-block">
+        <div class="afflu-pct">${f1(pct)}</div>
+        <div class="afflu-label">Affluenza</div>
+      </div>
+      <div class="afflu-bar-block">
+        <div class="afflu-bar-track">
+          <div class="afflu-bar-fill" style="width:${pct.toFixed(1)}%"></div>
+        </div>
+        <div class="afflu-totals">
+          Votanti: <strong>${fmtNum(votanti)}</strong> su <strong>${fmtNum(iscritti)}</strong> iscritti
+        </div>
+      </div>
+      <div class="afflu-gender-block">
+        <div class="afflu-gender-row">
+          <div class="afflu-gender-dot" style="background:#1565c0"></div>
+          <span class="afflu-gender-label">M</span>
+          <div class="afflu-gender-bar-track">
+            <div class="afflu-gender-bar-fill" style="background:#1565c0;width:${pctM.toFixed(1)}%"></div>
+          </div>
+          <span class="afflu-gender-pct">${f1(pctM)}</span>
+        </div>
+        <div class="afflu-gender-row">
+          <div class="afflu-gender-dot" style="background:#c62828"></div>
+          <span class="afflu-gender-label">F</span>
+          <div class="afflu-gender-bar-track">
+            <div class="afflu-gender-bar-fill" style="background:#c62828;width:${pctF.toFixed(1)}%"></div>
+          </div>
+          <span class="afflu-gender-pct">${f1(pctF)}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── SINDACO TAB ──────────────────────────────────────────────────────────────
+function renderSindaco() {
+  const { raggrup } = state; if (!raggrup) return;
+  const ana   = raggrup.anagrafica || [];
+  const votiR = raggrup.voti?.arrVotiRaggrup || {};
+  const tvotival = raggrup.voti?.tvotival || 0;
+
+  let cands = ana.map(a => ({
+    ...a,
+    voti:  (votiR[String(a.nraggrup)] || {}).voti || 0,
+    color: CAND_COLORS[a.nraggrup] || '#555',
+    bg:    CAND_BG[a.nraggrup]    || '#f8f8f8',
+    label: CAND_LABELS[a.nraggrup] || '',
+  })).sort((a,b) => b.voti - a.voti);
+
+  const maxV = Math.max(...cands.map(c => c.voti), 1);
+
+  // ballottaggio notice: nessuno supera il 50%
+  const winner = cands[0];
+  const winnerPct = tvotival > 0 ? winner.voti / tvotival * 100 : 0;
+  const ballottaggio = winnerPct < 50;
+
+  let bannerHtml = '';
+  if (ballottaggio && tvotival > 0) {
+    const c1 = cands[0], c2 = cands[1];
+    bannerHtml = `<div class="ballottaggio-banner">
+      <span class="icon">⚖️</span>
+      <span>Nessun candidato supera il 50%. Ballottaggio tra
+        <strong>${escHtml(c1.cognome_cand)}</strong> (${fmtPct(c1.voti, tvotival)}) e
+        <strong>${escHtml(c2.cognome_cand)}</strong> (${fmtPct(c2.voti, tvotival)}) —
+        17–18 ottobre 2021.</span>
+    </div>`;
+  }
+
+  const cards = cands.map(c => {
+    const pctStr = fmtPct(c.voti, tvotival);
+    const barW   = (c.voti / maxV * 100).toFixed(1);
+    const birth  = c.data_nascita_cand || '';
+    const bplace = prettyCity(c.luogo_nascita_cand || '');
+    const pills  = (c.arrListe||[]).map(l =>
+      `<span class="list-pill" style="background:${c.bg};color:${c.color}">${escHtml(l.nome_breve||l.nome)}</span>`
+    ).join('');
+    return `<div class="candidate-card" style="background:${c.bg}">
+      <div class="card-top-stripe" style="background:${c.color}"></div>
+      <div class="card-body">
+        <div class="card-name">${escHtml(c.cognome_cand)} ${escHtml(c.nome_cand)}</div>
+        <div class="card-subtitle">${birth ? escHtml(birth) + ' · ' : ''}nato/a a ${escHtml(bplace)}</div>
+        <div><span class="coalition-pill" style="background:${c.color}">${escHtml(c.label)}</span></div>
+        <div class="card-pct" style="color:${c.color}">${pctStr}</div>
+        <div class="card-bar-track">
+          <div class="card-bar-fill" style="background:${c.color};width:${barW}%"></div>
+        </div>
+        <div class="card-votes">${fmtNum(c.voti)} <span>voti</span></div>
+        <div class="card-lists">${pills}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('tab-sindaco').innerHTML = bannerHtml +
+    `<div class="candidates-grid">${cards}</div>`;
+}
+
+// ── LISTE TAB ────────────────────────────────────────────────────────────────
+function renderListe() {
+  const { raggrup, liste } = state; if (!raggrup || !liste) return;
+  const ana      = raggrup.anagrafica || [];
+  const votiR    = raggrup.voti?.arrVotiRaggrup || {};
+  const tvotival = raggrup.voti?.tvotival || 0;
+  const listeAna = liste.anagrafica || [];
+  const votiL    = liste.voti?.arrVotiListe || {};
+
+  // group lists by candidate (nraggrup)
+  const byRaggrup = {};
+  listeAna.forEach(l => {
+    if (!byRaggrup[l.nraggrup]) byRaggrup[l.nraggrup] = [];
+    byRaggrup[l.nraggrup].push(l);
+  });
+
+  const html = ana.sort((a,b) => {
+    const va = (votiR[String(a.nraggrup)]||{}).voti||0;
+    const vb = (votiR[String(b.nraggrup)]||{}).voti||0;
+    return vb - va;
+  }).map(a => {
+    const nr     = a.nraggrup;
+    const color  = CAND_COLORS[nr] || '#555';
+    const coalV  = (votiR[String(nr)]||{}).voti || 0;
+    const pctStr = fmtPct(coalV, tvotival);
+    const lists  = byRaggrup[nr] || [];
+    const maxLV  = Math.max(...lists.map(l => (votiL[String(l.nlista)]||{}).voti||0), 1);
+    const candName = `${a.cognome_cand||''} ${a.nome_cand||''}`.trim();
+    const eyebrow  = `${CAND_LABELS[nr]||''} · ${lists.length} LIST${lists.length===1?'A':'E'}`;
+
+    const rows = lists.map(l => {
+      const lv  = (votiL[String(l.nlista)]||{}).voti || 0;
+      const barW = (lv / maxLV * 100).toFixed(1);
+      const lPct = coalV > 0 ? fmtPct(lv, coalV) : '0,0%';
+      return `<div class="lista-row">
+        <div class="lista-name">${escHtml(l.nome_breve||l.nome)}</div>
+        <div class="lista-bar-track">
+          <div class="lista-bar-fill" style="background:${color};width:${barW}%"></div>
+        </div>
+        <div class="lista-votes" style="color:${color}">${fmtNum(lv)}</div>
+        <div class="lista-pct">${lPct}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="coalition-section">
+      <div class="coalition-header" style="background:${color}">
+        <div class="coalition-header-left">
+          <span class="coalition-header-name">${escHtml(eyebrow)}</span>
+          <span class="coalition-header-cand">${escHtml(candName)}</span>
+        </div>
+        <div class="coalition-header-right">
+          <div class="coalition-header-votes">${fmtNum(coalV)}</div>
+          <div class="coalition-header-pct">${pctStr} voti validi</div>
+        </div>
+      </div>
+      <div class="liste-table">${rows}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('tab-liste').innerHTML = html;
+}
+
+// ── CONSIGLIERI TAB ──────────────────────────────────────────────────────────
+function renderConsiglieri() {
+  const { liste, candidati } = state; if (!liste || !candidati) return;
+  const listeAna = liste.anagrafica || [];
+  const votiL    = liste.voti?.arrVotiListe || {};
+
+  const html = listeAna.map(l => {
+    const nlista   = l.nlista;
+    const color    = CAND_COLORS[l.nraggrup] || '#555';
+    const isOpen   = openAccordions.has(nlista);
+    const listData = candidati[String(nlista)];
+    const listVoti = (votiL[String(nlista)]||{}).voti || 0;
+
+    let inner = '';
+    if (!listData) {
+      inner = `<div style="padding:16px;font-style:italic;color:var(--muted);font-size:0.82rem">Dati non disponibili</div>`;
+    } else {
+      const votiC    = listData.voti?.arrVotiCandidato || {};
+      const totLista = listData.voti?.totVotiLista || 0;
+      const candAna  = listData.anagrafica || [];
+      let cList = candAna.map(c => ({
+        nrcandi: c.nrcandi,
+        nome:    c.nome,
+        voti:    (votiC[String(c.nrcandi)]||{}).voti || 0,
+      }));
+      cList.sort((a,b) => b.voti - a.voti);
+      const rows = cList.map((c,i) => `<tr>
+        <td>${i+1}</td>
+        <td>${escHtml(c.nome)}</td>
+        <td>${fmtNum(c.voti)}</td>
+        <td>${fmtPct(c.voti, totLista)}</td>
+      </tr>`).join('');
+      inner = `<table class="candi-table">
+        <thead><tr><th>#</th><th>Nome</th><th>Voti</th><th>%</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    }
+
+    return `<div class="accordion-item ${isOpen?'open':''}" id="acc-${nlista}">
+      <div class="accordion-header" onclick="toggleAccordion(${nlista})" role="button" tabindex="0">
+        <div class="accordion-header-left">
+          <div class="coalition-dot" style="background:${color}"></div>
+          <span class="accordion-list-name">${escHtml(l.nome_breve||l.nome)}</span>
+        </div>
+        <div class="accordion-header-right">
+          <span class="accordion-votes">${fmtNum(listVoti)}</span>
+          <span class="accordion-chevron">▼</span>
+        </div>
+      </div>
+      <div class="accordion-body">${inner}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('tab-consiglieri').innerHTML = html;
+  document.querySelectorAll('.accordion-header').forEach(el => {
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
+    });
+  });
+}
+
+function toggleAccordion(nlista) {
+  if (openAccordions.has(nlista)) openAccordions.delete(nlista);
+  else openAccordions.add(nlista);
+  const item = document.getElementById(`acc-${nlista}`);
+  if (item) {
+    item.classList.toggle('open', openAccordions.has(nlista));
+    item.querySelector('.accordion-header').setAttribute('aria-expanded', openAccordions.has(nlista));
+  }
+}
+
+// ── TAB SWITCH ────────────────────────────────────────────────────────────────
+let activeTab = 'sindaco';
+function switchTab(name) {
+  activeTab = name;
+  ['sindaco','liste','consiglieri','mappe'].forEach(t => {
+    document.getElementById(`btn-${t}`).classList.toggle('active', t === name);
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === name);
+  });
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+switchTab('sindaco');
+loadData();
+</script>
 </body>
 </html>
