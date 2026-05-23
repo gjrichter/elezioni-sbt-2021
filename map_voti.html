@@ -2,81 +2,227 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Voti per Candidato e Sede – SBdT 2021</title>
+  <title>Voti Liste per Candidato e Sede – SBdT 2021</title>
   <script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/ixmaps.js"></script>
   <style>
-    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; font-family: sans-serif; }
-    #map { width: 100%; height: 100%; }
-    #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-               background: rgba(255,255,255,0.9); padding: 1em 2em; border-radius: 8px;
-               font-size: 1.1em; z-index: 9999; }
+    html, body {
+      width: 100%; height: 100%; margin: 0; overflow: hidden;
+      font-family: sans-serif; display: flex; flex-direction: column;
+    }
+
+    /* ── CONTROLS BAR ── */
+    #controls {
+      flex-shrink: 0;
+      background: #1a2a1a;
+      color: #fff;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    #controls label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      opacity: 0.75;
+      white-space: nowrap;
+    }
+    #cand-select {
+      font-size: 0.88rem;
+      padding: 6px 10px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      cursor: pointer;
+      min-width: 280px;
+    }
+    #cand-select option { background: #1a2a1a; color: #fff; }
+    #cand-info {
+      font-size: 0.76rem;
+      opacity: 0.55;
+      white-space: nowrap;
+    }
+    #cand-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    /* ── MAP AREA ── */
+    #map-wrapper { flex: 1; position: relative; overflow: hidden; }
+    #loading {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      background: rgba(255,255,255,0.92);
+      padding: 1em 2em; border-radius: 8px;
+      font-size: 1.1em; z-index: 9999;
+    }
   </style>
 </head>
 <body>
-<div id="loading">⟳ Caricamento risultati…</div>
-<div id="map"></div>
+
+<div id="controls">
+  <label for="cand-select">Candidato:</label>
+  <div id="cand-dot"></div>
+  <select id="cand-select" onchange="onCandChange()"></select>
+  <span id="cand-info"></span>
+</div>
+
+<div id="map-wrapper">
+  <div id="loading">⟳ Caricamento dati…</div>
+  <!-- #map creato dinamicamente da buildMapFor() -->
+</div>
+
 <script>
 
+// ── CANDIDATI E LISTE ────────────────────────────────────────────────────────
+var CAND_INFO = {
+  4: {
+    nome:  "Piunti Pasqualino",
+    label: "Centro-destra",
+    color: "#e67e22",
+    colors: ["#e67e22", "#c0392b", "#2980b9", "#27ae60", "#8e44ad", "#2c3e50"],
+    liste: [
+      { nlista: 12, nome: "PIUNTI SINDACO"         },
+      { nlista: 13, nome: "NOI CON L'ITALIA"       },
+      { nlista: 14, nome: "POPOLO DELLA FAMIGLIA"  },
+      { nlista: 15, nome: "LEGA"                   },
+      { nlista: 16, nome: "FORZA ITALIA"           },
+      { nlista: 17, nome: "FRATELLI D'ITALIA"      }
+    ]
+  },
+  1: {
+    nome:  "Spazzafumo Antonio",
+    label: "Coalizione civica",
+    color: "#2c7be5",
+    colors: ["#1565c0", "#1e88e5", "#42a5f5", "#90caf9", "#bbdefb"],
+    liste: [
+      { nlista: 1, nome: "CENTRO CIVICO POPOLARE"     },
+      { nlista: 2, nome: "VIVA SAN BENEDETTO"          },
+      { nlista: 3, nome: "RINASCITA SAMB. 0735"        },
+      { nlista: 4, nome: "RIVOLUZIONE CIVICA"          },
+      { nlista: 5, nome: "LIBERA SAN BENEDETTO"        }
+    ]
+  },
+  3: {
+    nome:  "Canducci Paolo",
+    label: "Progressisti",
+    color: "#27ae60",
+    colors: ["#1b5e20", "#388e3c", "#81c784"],
+    liste: [
+      { nlista:  9, nome: "EUROPA VERDE RINASCI"        },
+      { nlista: 10, nome: "RIFORMISTI CANDUCCI"         },
+      { nlista: 11, nome: "DEMOCRATICI PER CANDUCCI"    }
+    ]
+  },
+  2: {
+    nome:  "Bottiglieri Aurora",
+    label: "Centro-sinistra",
+    color: "#c0392b",
+    colors: ["#b71c1c", "#e53935", "#ef9a9a"],
+    liste: [
+      { nlista: 6, nome: "NOS – NUOVI ORIZZONTI"  },
+      { nlista: 7, nome: "ARTICOLO UNO E CIVICI"        },
+      { nlista: 8, nome: "PARTITO DEMOCRATICO"          }
+    ]
+  },
+  5: {
+    nome:  "Angelini Serafino",
+    label: "M5S",
+    color: "#7d3c98",
+    colors: ["#6c3483", "#c39bd3"],
+    liste: [
+      { nlista: 18, nome: "CAMBIA SBT CON ANGELINI" },
+      { nlista: 19, nome: "MOVIMENTO 5 STELLE"      }
+    ]
+  }
+};
+
+// ordine nel select: vincitore prima, poi per voti
+var CAND_ORDER = [4, 1, 3, 2, 5];
+
+// ── URL ──────────────────────────────────────────────────────────────────────
 var SEDI_URL  = "https://raw.githubusercontent.com/gjrichter/elezioni-sbt-2021/main/data/sedi_sezioni_elettorali.geojson";
 var DATA_BASE = "https://raw.githubusercontent.com/gjrichter/elezioni-sbt-2021/main/data/sezioni/";
 var N_SEZ     = 43;
 
-// 1=Spazzafumo, 2=Bottiglieri, 3=Canducci, 4=Piunti, 5=Angelini
-var COLORS = ["#3498db", "#e74c3c", "#27ae60", "#f39c12", "#8e44ad"];
+// ── STATO GLOBALE ────────────────────────────────────────────────────────────
+var sediGj      = null;
+var sezListeIdx = {};   // sezione (int) → { nl_1: voti, nl_2: voti, ... }
 
-function loadSezioneVoti(n) {
+// ── CARICA LISTE PER SEZIONE ─────────────────────────────────────────────────
+function loadSezioneListe(n) {
   var pad = String(n).padStart(3, "0");
-  return fetch(DATA_BASE + pad + "/raggrup.json")
+  return fetch(DATA_BASE + pad + "/liste.json")
     .then(function(r) { return r.json(); })
     .then(function(d) {
-      var arr = (d.voti || {}).arrVotiRaggrup || {};
-      return {
-        sezione: n,
-        v1: (arr["1"] || {}).voti || 0,
-        v2: (arr["2"] || {}).voti || 0,
-        v3: (arr["3"] || {}).voti || 0,
-        v4: (arr["4"] || {}).voti || 0,
-        v5: (arr["5"] || {}).voti || 0
-      };
+      var arr = (d.voti || {}).arrVotiListe || {};
+      var row = { sezione: n };
+      Object.keys(arr).forEach(function(k) {
+        row["nl_" + k] = arr[k].voti || 0;
+      });
+      return row;
     });
 }
 
-var promises = [fetch(SEDI_URL).then(function(r) { return r.json(); })];
-for (var i = 1; i <= N_SEZ; i++) promises.push(loadSezioneVoti(i));
-
-Promise.all(promises).then(function(results) {
-  var sediGj  = results[0];
-  var sezVoti = results.slice(1);
-
-  var votiIdx = {};
-  sezVoti.forEach(function(s) { votiIdx[s.sezione] = s; });
-
-  var sediData = sediGj.features.map(function(feat) {
-    var p = feat.properties;
-    var v1 = 0, v2 = 0, v3 = 0, v4 = 0, v5 = 0;
-    for (var s = p.sez_da; s <= p.sez_a; s++) {
-      var v = votiIdx[s] || {};
-      v1 += v.v1 || 0;
-      v2 += v.v2 || 0;
-      v3 += v.v3 || 0;
-      v4 += v.v4 || 0;
-      v5 += v.v5 || 0;
-    }
-    return {
-      sez_da:   p.sez_da,
-      voti_1:   v1,
-      voti_2:   v2,
-      voti_3:   v3,
-      voti_4:   v4,
-      voti_5:   v5,
-      tot_voti: v1 + v2 + v3 + v4 + v5
-    };
+// ── AGGREGA VOTI LISTE PER SEDE ───────────────────────────────────────────────
+function computeSediData(candNum) {
+  var cand = CAND_INFO[candNum];
+  return sediGj.features.map(function(feat) {
+    var p   = feat.properties;
+    var row = { sez_da: p.sez_da };
+    var tot = 0;
+    cand.liste.forEach(function(l, i) {
+      var v = 0;
+      for (var s = p.sez_da; s <= p.sez_a; s++) {
+        v += (sezListeIdx[s] || {})["nl_" + l.nlista] || 0;
+      }
+      row["l" + (i + 1)] = v;
+      tot += v;
+    });
+    row.tot_voti_cand = tot;
+    return row;
   });
+}
 
-  var maxVoti = Math.max.apply(null, sediData.map(function(d) { return d.tot_voti || 1; }));
+// ── TOOLTIP DINAMICO ─────────────────────────────────────────────────────────
+function buildTooltip(cand) {
+  var lines = ["<b>{{nome}}</b>", "{{indirizzo}}", "Sezioni: {{sezioni}}"];
+  cand.liste.forEach(function(l, i) {
+    lines.push(l.nome + ": <b>{{l" + (i + 1) + "}}</b>");
+  });
+  lines.push("Totale: <b>{{tot_voti_cand}}</b>");
+  return lines.join("<br>");
+}
 
-  document.getElementById("loading").style.display = "none";
+// ── COSTRUISCE / RICOSTRUISCE LA MAPPA ───────────────────────────────────────
+function buildMapFor(candNum) {
+  var cand     = CAND_INFO[candNum];
+  var sediData = computeSediData(candNum);
+  var N        = cand.liste.length;
+  var values   = cand.liste.map(function(l, i) { return "l" + (i + 1); }).join("|");
+  var maxVoti  = Math.max.apply(null, sediData.map(function(d) { return d.tot_voti_cand || 0; }));
+  var totalV   = sediData.reduce(function(s, d) { return s + (d.tot_voti_cand || 0); }, 0);
 
+  // Aggiorna info nel controllo
+  var dot = document.getElementById("cand-dot");
+  dot.style.background = cand.color;
+  dot.style.display = "inline-block";
+  document.getElementById("cand-info").textContent =
+    totalV.toLocaleString("it-IT") + " voti · " + N + " liste";
+
+  // Ricrea il div #map (ixmaps ha bisogno di un elemento pulito)
+  var wrapper = document.getElementById("map-wrapper");
+  var old = document.getElementById("map");
+  if (old) old.remove();
+  var mapDiv = document.createElement("div");
+  mapDiv.id = "map";
+  mapDiv.style.cssText = "width:100%;height:100%;";
+  wrapper.appendChild(mapDiv);
+
+  // ── ixMaps ────────────────────────────────────────────────────────────────
   var myMap = ixmaps.Map("map", {
     mapType: "VT_TONER_LITE",
     mode:    "info",
@@ -91,7 +237,7 @@ Promise.all(promises).then(function(results) {
     flushChartDraw:  1000000
   });
 
-  // FEATURE base
+  // Layer base FEATURE: geometria sedi, id = sez_da
   myMap.layer("sedi")
     .data({ obj: sediGj, type: "geojson" })
     .binding({ geo: "geometry", id: "sez_da", title: "nome" })
@@ -99,32 +245,59 @@ Promise.all(promises).then(function(results) {
     .style({ colorscheme: ["#ccc"], fillopacity: 0.1, showdata: "true" })
     .define();
 
-  // Overlay voti assoluti
+  // Overlay: voti per lista del candidato selezionato, dimensione = tot voti
   myMap.layer("sedi")
     .data({ obj: sediData, type: "json" })
-    .binding({ lookup: "sez_da", value: "voti_1|voti_2|voti_3|voti_4|voti_5", title: "nome" })
+    .binding({ geo: "sez_da", value: values })
     .type("CHART|BAR|STACKED|SIZE|GRID|BOX|VALUES")
     .style({
-      colorscheme:     COLORS,
-      normalsizevalue: String(Math.max(maxVoti, 1000)),
+      colorscheme:     cand.colors,
+      label:           cand.liste.map(function(l) { return l.nome; }),
+      normalsizevalue: String(Math.max(maxVoti, 100)),
       scale:           1,
       fillopacity:     0.88,
-      gridx:           5,
+      gridx:           N,
       showdata:        "true"
     })
     .meta({
       name:    "voti-theme",
-      tooltip: "<b>{{nome}}</b><br>{{indirizzo}}<br>" +
-               "Sezioni: {{sezioni}}<br>" +
-               "Spazzafumo: <b>{{voti_1}}</b><br>" +
-               "Bottiglieri: <b>{{voti_2}}</b><br>" +
-               "Canducci: <b>{{voti_3}}</b><br>" +
-               "Piunti: <b>{{voti_4}}</b><br>" +
-               "Angelini: <b>{{voti_5}}</b><br>" +
-               "Totale: <b>{{tot_voti}}</b>"
+      title:   "Voti liste – " + cand.nome,
+      tooltip: buildTooltip(cand)
     })
-    .title("Voti per candidato 2021")
     .define();
+}
+
+// ── POPOLA IL SELECT ─────────────────────────────────────────────────────────
+function populateSelect() {
+  var sel = document.getElementById("cand-select");
+  sel.innerHTML = "";
+  CAND_ORDER.forEach(function(k) {
+    var c   = CAND_INFO[k];
+    var opt = document.createElement("option");
+    opt.value       = k;
+    opt.textContent = c.nome + " – " + c.label;
+    sel.appendChild(opt);
+  });
+}
+
+// ── HANDLER SELECT ───────────────────────────────────────────────────────────
+function onCandChange() {
+  var k = parseInt(document.getElementById("cand-select").value, 10);
+  buildMapFor(k);
+}
+
+// ── AVVIO ────────────────────────────────────────────────────────────────────
+var promises = [fetch(SEDI_URL).then(function(r) { return r.json(); })];
+for (var i = 1; i <= N_SEZ; i++) promises.push(loadSezioneListe(i));
+
+Promise.all(promises).then(function(results) {
+  sediGj = results[0];
+  results.slice(1).forEach(function(s) { sezListeIdx[s.sezione] = s; });
+
+  document.getElementById("loading").style.display = "none";
+
+  populateSelect();
+  buildMapFor(CAND_ORDER[0]);   // default: Piunti (vincitore)
 
 }).catch(function(e) {
   document.getElementById("loading").textContent = "✗ Errore: " + e.message;
