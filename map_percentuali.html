@@ -98,21 +98,28 @@ Promise.all(promises).then(function(results) {
     .style({ colorscheme: ["#ccc"], fillopacity: 0.1, showdata: "true" })
     .define();
 
-  // Overlay percentuali
+  // Overlay percentuali – DONUT PIE, dimensione proporzionale a tot_voti
   myMap.layer("sedi")
     .data({ obj: sediData, type: "json" })
-    .binding({ lookup: "sez_da", value: "pct_1|pct_2|pct_3|pct_4|pct_5", title: "nome" })
-    .type("CHART|BAR|STACKED|SIZE|GRID|BOX|VALUES")
+    .binding({ geo: "sez_da", value: "pct_1|pct_2|pct_3|pct_4|pct_5", size: "tot_voti" })
+    .type("CHART|PIE|DONUT|HALF|SIZE|SORT|SIMPLELEGEND")
     .style({
       colorscheme:     COLORS,
-      normalsizevalue: "100",
-      scale:           1,
+      label:           ["Spazzafumo", "Bottiglieri", "Canducci", "Piunti", "Angelini"],
       fillopacity:     0.88,
-      gridx:           5,
-      showdata:        "true"
+      shadow:          false,
+      visible:         true,
+      showdata:        true,
+      units:           "",
+      refreshtimeout:  0,
+      normalsizevalue: "1000",
+      scale:           1,
+      sizepow:         2,
+      valuescale:      1
     })
     .meta({
       name:    "pct-theme",
+      title:   "% voti per candidato 2021",
       tooltip: "<b>{{nome}}</b><br>{{indirizzo}}<br>" +
                "Sezioni: {{sezioni}}<br>" +
                "Spazzafumo: <b>{{pct_1}}%</b><br>" +
@@ -122,7 +129,6 @@ Promise.all(promises).then(function(results) {
                "Angelini: <b>{{pct_5}}%</b><br>" +
                "Totale voti: {{tot_voti}}"
     })
-    .title("% voti per candidato 2021")
     .define();
 
 }).catch(function(e) {
