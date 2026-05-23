@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Voti Liste per Candidato e Sede – SBdT 2021</title>
+  <title>Voti Preferenza per Sede – SBdT 2021</title>
   <script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/ixmaps.js"></script>
   <style>
     html, body {
@@ -22,68 +22,82 @@
       flex-wrap: wrap;
     }
     #controls label {
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: 600;
-      opacity: 0.75;
+      opacity: 0.65;
       white-space: nowrap;
     }
-    #cand-select {
-      font-size: 0.88rem;
-      padding: 6px 10px;
+    .ctrl-select {
+      font-size: 0.85rem;
+      padding: 5px 10px;
       border-radius: 5px;
-      border: 1px solid rgba(255,255,255,0.25);
+      border: 1px solid rgba(255,255,255,0.2);
       background: rgba(255,255,255,0.1);
       color: #fff;
       cursor: pointer;
-      min-width: 280px;
     }
-    #cand-select option { background: #1a2a1a; color: #fff; }
+    .ctrl-select option, .ctrl-select optgroup {
+      background: #1a2a1a;
+      color: #fff;
+    }
+    #sel-lista   { min-width: 240px; }
+    #sel-cand    { min-width: 220px; }
+
+    #cand-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%; flex-shrink: 0;
+      display: none;
+    }
     #cand-info {
-      font-size: 0.76rem;
+      font-size: 0.74rem;
       opacity: 0.55;
       white-space: nowrap;
     }
-    #cand-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      display: none;
-    }
 
-    /* ── MAP AREA ── */
+    /* ── MAP ── */
     #map-wrapper { flex: 1; position: relative; overflow: hidden; }
     #loading {
       position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%,-50%);
+      transform: translate(-50%, -50%);
       background: rgba(255,255,255,0.92);
-      padding: 1em 2em; border-radius: 8px;
-      font-size: 1.1em; z-index: 9999;
+      padding: 1em 2.5em; border-radius: 8px;
+      font-size: 1em; z-index: 9999;
+      display: flex; align-items: center; gap: 10px;
     }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid #ccc;
+      border-top-color: #27ae60;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
 <div id="controls">
-  <label for="cand-select">Candidato:</label>
+  <label for="sel-lista">Lista:</label>
+  <select id="sel-lista" class="ctrl-select" onchange="onListaChange()"></select>
+
+  <label for="sel-cand">Candidato:</label>
+  <select id="sel-cand" class="ctrl-select" onchange="onCandChange()"></select>
+
   <div id="cand-dot"></div>
-  <select id="cand-select" onchange="onCandChange()"></select>
   <span id="cand-info"></span>
 </div>
 
 <div id="map-wrapper">
-  <div id="loading">⟳ Caricamento dati…</div>
-  <!-- #map creato dinamicamente da buildMapFor() -->
+  <div id="loading"><div class="spinner"></div> Caricamento dati (43 sezioni)…</div>
 </div>
 
 <script>
 
-// ── CANDIDATI E LISTE ────────────────────────────────────────────────────────
-var CAND_INFO = {
-  4: {
-    nome:  "Piunti Pasqualino",
-    label: "Centro-destra",
+// ── LISTE RAGGRUPPATE PER CANDIDATO SINDACO ─────────────────────────────────
+var COALIZIONI = [
+  {
+    label: "Centro-destra – Piunti Pasqualino",
     color: "#e67e22",
-    colors: ["#e67e22", "#c0392b", "#2980b9", "#27ae60", "#8e44ad", "#2c3e50"],
     liste: [
       { nlista: 12, nome: "PIUNTI SINDACO"         },
       { nlista: 13, nome: "NOI CON L'ITALIA"       },
@@ -93,55 +107,52 @@ var CAND_INFO = {
       { nlista: 17, nome: "FRATELLI D'ITALIA"      }
     ]
   },
-  1: {
-    nome:  "Spazzafumo Antonio",
-    label: "Coalizione civica",
+  {
+    label: "Coalizione civica – Spazzafumo Antonio",
     color: "#2c7be5",
-    colors: ["#1565c0", "#1e88e5", "#42a5f5", "#90caf9", "#bbdefb"],
     liste: [
-      { nlista: 1, nome: "CENTRO CIVICO POPOLARE"     },
-      { nlista: 2, nome: "VIVA SAN BENEDETTO"          },
-      { nlista: 3, nome: "RINASCITA SAMB. 0735"        },
-      { nlista: 4, nome: "RIVOLUZIONE CIVICA"          },
-      { nlista: 5, nome: "LIBERA SAN BENEDETTO"        }
+      { nlista:  1, nome: "CENTRO CIVICO POPOLARE"  },
+      { nlista:  2, nome: "VIVA SAN BENEDETTO"       },
+      { nlista:  3, nome: "RINASCITA SAMB. 0735"     },
+      { nlista:  4, nome: "RIVOLUZIONE CIVICA"       },
+      { nlista:  5, nome: "LIBERA SAN BENEDETTO"     }
     ]
   },
-  3: {
-    nome:  "Canducci Paolo",
-    label: "Progressisti",
+  {
+    label: "Progressisti – Canducci Paolo",
     color: "#27ae60",
-    colors: ["#1b5e20", "#388e3c", "#81c784"],
     liste: [
-      { nlista:  9, nome: "EUROPA VERDE RINASCI"        },
-      { nlista: 10, nome: "RIFORMISTI CANDUCCI"         },
-      { nlista: 11, nome: "DEMOCRATICI PER CANDUCCI"    }
+      { nlista:  9, nome: "EUROPA VERDE RINASCI"      },
+      { nlista: 10, nome: "RIFORMISTI CANDUCCI"       },
+      { nlista: 11, nome: "DEMOCRATICI PER CANDUCCI"  }
     ]
   },
-  2: {
-    nome:  "Bottiglieri Aurora",
-    label: "Centro-sinistra",
+  {
+    label: "Centro-sinistra – Bottiglieri Aurora",
     color: "#c0392b",
-    colors: ["#b71c1c", "#e53935", "#ef9a9a"],
     liste: [
-      { nlista: 6, nome: "NOS – NUOVI ORIZZONTI"  },
-      { nlista: 7, nome: "ARTICOLO UNO E CIVICI"        },
-      { nlista: 8, nome: "PARTITO DEMOCRATICO"          }
+      { nlista:  6, nome: "NOS – NUOVI ORIZZONTI"   },
+      { nlista:  7, nome: "ARTICOLO UNO E CIVICI"   },
+      { nlista:  8, nome: "PARTITO DEMOCRATICO"     }
     ]
   },
-  5: {
-    nome:  "Angelini Serafino",
-    label: "M5S",
+  {
+    label: "M5S – Angelini Serafino",
     color: "#7d3c98",
-    colors: ["#6c3483", "#c39bd3"],
     liste: [
       { nlista: 18, nome: "CAMBIA SBT CON ANGELINI" },
       { nlista: 19, nome: "MOVIMENTO 5 STELLE"      }
     ]
   }
-};
+];
 
-// ordine nel select: vincitore prima, poi per voti
-var CAND_ORDER = [4, 1, 3, 2, 5];
+// flat lookup: nlista → { nome, color }
+var LISTA_META = {};
+COALIZIONI.forEach(function(c) {
+  c.liste.forEach(function(l) {
+    LISTA_META[l.nlista] = { nome: l.nome, color: c.color, label: c.label };
+  });
+});
 
 // ── URL ──────────────────────────────────────────────────────────────────────
 var SEDI_URL  = "https://raw.githubusercontent.com/gjrichter/elezioni-sbt-2021/main/data/sedi_sezioni_elettorali.geojson";
@@ -149,71 +160,69 @@ var DATA_BASE = "https://raw.githubusercontent.com/gjrichter/elezioni-sbt-2021/m
 var N_SEZ     = 43;
 
 // ── STATO GLOBALE ────────────────────────────────────────────────────────────
-var sediGj      = null;
-var sezListeIdx = {};   // sezione (int) → { nl_1: voti, nl_2: voti, ... }
+var sediGj = null;
 
-// ── CARICA LISTE PER SEZIONE ─────────────────────────────────────────────────
-function loadSezioneListe(n) {
+// sezCandVoti[sezione]["nlista_nrcandi"] = voti
+var sezCandVoti = {};
+
+// candidatiMeta[nlista][nrcandi] = { nome, votiTotali }
+var candidatiMeta = {};
+
+// ── CARICAMENTO ──────────────────────────────────────────────────────────────
+function loadSezioneCanditati(n) {
   var pad = String(n).padStart(3, "0");
-  return fetch(DATA_BASE + pad + "/liste.json")
+  return fetch(DATA_BASE + pad + "/candidati.json")
     .then(function(r) { return r.json(); })
     .then(function(d) {
-      var arr = (d.voti || {}).arrVotiListe || {};
       var row = { sezione: n };
-      Object.keys(arr).forEach(function(k) {
-        row["nl_" + k] = arr[k].voti || 0;
+      Object.keys(d).forEach(function(nlista) {
+        var arrV = (d[nlista].voti || {}).arrVotiCandidato || {};
+        Object.keys(arrV).forEach(function(nrcandi) {
+          row[nlista + "_" + nrcandi] = arrV[nrcandi].voti || 0;
+        });
+        // build candidatiMeta once (first sezione that has anagrafica)
+        if (!candidatiMeta[nlista]) {
+          candidatiMeta[nlista] = {};
+          (d[nlista].anagrafica || []).forEach(function(c) {
+            candidatiMeta[nlista][c.nrcandi] = { nome: c.nome, votiTotali: 0 };
+          });
+        }
       });
       return row;
     });
 }
 
-// ── AGGREGA VOTI LISTE PER SEDE ───────────────────────────────────────────────
-function computeSediData(candNum) {
-  var cand = CAND_INFO[candNum];
+// ── AGGREGA VOTI PER SEDE ─────────────────────────────────────────────────────
+function computeSediData(nlista, nrcandi) {
+  var key = nlista + "_" + nrcandi;
   return sediGj.features.map(function(feat) {
-    var p   = feat.properties;
-    var row = { sez_da: p.sez_da };
-    var tot = 0;
-    cand.liste.forEach(function(l, i) {
-      var v = 0;
-      for (var s = p.sez_da; s <= p.sez_a; s++) {
-        v += (sezListeIdx[s] || {})["nl_" + l.nlista] || 0;
-      }
-      row["l" + (i + 1)] = v;
-      tot += v;
-    });
-    row.tot_voti_cand = tot;
-    return row;
+    var p = feat.properties;
+    var v = 0;
+    for (var s = p.sez_da; s <= p.sez_a; s++) {
+      v += (sezCandVoti[s] || {})[key] || 0;
+    }
+    return { sez_da: p.sez_da, voti_cand: v };
   });
 }
 
-// ── TOOLTIP DINAMICO ─────────────────────────────────────────────────────────
-function buildTooltip(cand) {
-  var lines = ["<b>{{nome}}</b>", "{{indirizzo}}", "Sezioni: {{sezioni}}"];
-  cand.liste.forEach(function(l, i) {
-    lines.push(l.nome + ": <b>{{l" + (i + 1) + "}}</b>");
-  });
-  lines.push("Totale: <b>{{tot_voti_cand}}</b>");
-  return lines.join("<br>");
-}
+// ── COSTRUISCE / RICOSTRUISCE MAPPA ──────────────────────────────────────────
+function buildMapFor(nlista, nrcandi) {
+  var sediData = computeSediData(nlista, nrcandi);
+  var maxVoti  = Math.max.apply(null, sediData.map(function(d) { return d.voti_cand || 0; }));
+  var totalV   = sediData.reduce(function(s, d) { return s + (d.voti_cand || 0); }, 0);
+  var meta     = LISTA_META[nlista] || {};
+  var candName = (candidatiMeta[nlista] || {})[nrcandi]
+               ? candidatiMeta[nlista][nrcandi].nome
+               : "—";
 
-// ── COSTRUISCE / RICOSTRUISCE LA MAPPA ───────────────────────────────────────
-function buildMapFor(candNum) {
-  var cand     = CAND_INFO[candNum];
-  var sediData = computeSediData(candNum);
-  var N        = cand.liste.length;
-  var values   = cand.liste.map(function(l, i) { return "l" + (i + 1); }).join("|");
-  var maxVoti  = Math.max.apply(null, sediData.map(function(d) { return d.tot_voti_cand || 0; }));
-  var totalV   = sediData.reduce(function(s, d) { return s + (d.tot_voti_cand || 0); }, 0);
-
-  // Aggiorna info nel controllo
+  // info nella barra
   var dot = document.getElementById("cand-dot");
-  dot.style.background = cand.color;
+  dot.style.background = meta.color || "#888";
   dot.style.display = "inline-block";
   document.getElementById("cand-info").textContent =
-    totalV.toLocaleString("it-IT") + " voti · " + N + " liste";
+    totalV.toLocaleString("it-IT") + " voti totali  ·  " + meta.nome;
 
-  // Ricrea il div #map (ixmaps ha bisogno di un elemento pulito)
+  // ricrea #map pulito
   var wrapper = document.getElementById("map-wrapper");
   var old = document.getElementById("map");
   if (old) old.remove();
@@ -237,7 +246,7 @@ function buildMapFor(candNum) {
     flushChartDraw:  1000000
   });
 
-  // Layer base FEATURE: geometria sedi, id = sez_da
+  // Layer base FEATURE
   myMap.layer("sedi")
     .data({ obj: sediGj, type: "geojson" })
     .binding({ geo: "geometry", id: "sez_da", title: "nome" })
@@ -245,62 +254,120 @@ function buildMapFor(candNum) {
     .style({ colorscheme: ["#ccc"], fillopacity: 0.1, showdata: "true" })
     .define();
 
-  // Overlay: voti per lista del candidato selezionato, dimensione = tot voti
+  // Bubble: dimensione = voti del candidato aggregati per sede
   myMap.layer("sedi")
     .data({ obj: sediData, type: "json" })
-    .binding({ geo: "sez_da", value: values })
-    .type("CHART|BAR|STACKED|SIZE|GRID|BOX|VALUES")
+    .binding({ geo: "sez_da", value: "voti_cand", size: "voti_cand" })
+    .type("CHART|BUBBLE|SIZE")
     .style({
-      colorscheme:     cand.colors,
-      label:           cand.liste.map(function(l) { return l.nome; }),
-      normalsizevalue: String(Math.max(maxVoti, 100)),
+      colorscheme:     [meta.color || "#888"],
+      normalsizevalue: String(Math.max(maxVoti, 1)),
       scale:           1,
-      fillopacity:     0.88,
-      gridx:           N,
+      fillopacity:     0.75,
+      linecolor:       "#fff",
+      linewidth:       1,
       showdata:        "true"
     })
     .meta({
-      name:    "voti-theme",
-      title:   "Voti liste – " + cand.nome,
-      tooltip: buildTooltip(cand)
+      name:    "voti-pref-theme",
+      title:   candName + " – " + meta.nome,
+      tooltip: "<b>{{nome}}</b><br>{{indirizzo}}<br>" +
+               "Sezioni: {{sezioni}}<br>" +
+               candName + ": <b>{{voti_cand}}</b> preferenze"
     })
     .define();
 }
 
-// ── POPOLA IL SELECT ─────────────────────────────────────────────────────────
-function populateSelect() {
-  var sel = document.getElementById("cand-select");
+// ── POPOLA SELECT LISTE ──────────────────────────────────────────────────────
+function populateListaSelect() {
+  var sel = document.getElementById("sel-lista");
   sel.innerHTML = "";
-  CAND_ORDER.forEach(function(k) {
-    var c   = CAND_INFO[k];
+  COALIZIONI.forEach(function(coal) {
+    var grp = document.createElement("optgroup");
+    grp.label = coal.label;
+    coal.liste.forEach(function(l) {
+      var opt = document.createElement("option");
+      opt.value       = l.nlista;
+      opt.textContent = "Lista " + l.nlista + " – " + l.nome;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  });
+}
+
+// ── POPOLA SELECT CANDIDATI (per lista selezionata) ──────────────────────────
+function populateCandSelect(nlista) {
+  var sel  = document.getElementById("sel-cand");
+  var meta = candidatiMeta[nlista] || {};
+  sel.innerHTML = "";
+
+  // Ordina per voti totali desc
+  var cands = Object.keys(meta).map(function(nrcandi) {
+    return { nrcandi: parseInt(nrcandi, 10), nome: meta[nrcandi].nome,
+             voti: meta[nrcandi].votiTotali || 0 };
+  }).sort(function(a, b) {
+    return b.voti - a.voti || a.nrcandi - b.nrcandi;
+  });
+
+  cands.forEach(function(c) {
     var opt = document.createElement("option");
-    opt.value       = k;
-    opt.textContent = c.nome + " – " + c.label;
+    opt.value       = c.nrcandi;
+    opt.textContent = c.nome + (c.voti > 0 ? "  (" + c.voti + ")" : "");
     sel.appendChild(opt);
   });
 }
 
-// ── HANDLER SELECT ───────────────────────────────────────────────────────────
+// ── HANDLERS ─────────────────────────────────────────────────────────────────
+function onListaChange() {
+  var nlista = parseInt(document.getElementById("sel-lista").value, 10);
+  populateCandSelect(nlista);
+  var nrcandi = parseInt(document.getElementById("sel-cand").value, 10);
+  buildMapFor(nlista, nrcandi);
+}
+
 function onCandChange() {
-  var k = parseInt(document.getElementById("cand-select").value, 10);
-  buildMapFor(k);
+  var nlista  = parseInt(document.getElementById("sel-lista").value, 10);
+  var nrcandi = parseInt(document.getElementById("sel-cand").value, 10);
+  buildMapFor(nlista, nrcandi);
+}
+
+// ── CALCOLA TOTALI CITYWIDE DA TUTTE LE SEZIONI ───────────────────────────────
+function buildCandidatiTotali() {
+  // somma i voti da sezCandVoti per ogni candidato
+  Object.keys(candidatiMeta).forEach(function(nlista) {
+    Object.keys(candidatiMeta[nlista]).forEach(function(nrcandi) {
+      var key = nlista + "_" + nrcandi;
+      var tot = 0;
+      for (var s = 1; s <= N_SEZ; s++) {
+        tot += (sezCandVoti[s] || {})[key] || 0;
+      }
+      candidatiMeta[nlista][nrcandi].votiTotali = tot;
+    });
+  });
 }
 
 // ── AVVIO ────────────────────────────────────────────────────────────────────
 var promises = [fetch(SEDI_URL).then(function(r) { return r.json(); })];
-for (var i = 1; i <= N_SEZ; i++) promises.push(loadSezioneListe(i));
+for (var i = 1; i <= N_SEZ; i++) promises.push(loadSezioneCanditati(i));
 
 Promise.all(promises).then(function(results) {
   sediGj = results[0];
-  results.slice(1).forEach(function(s) { sezListeIdx[s.sezione] = s; });
+  results.slice(1).forEach(function(s) { sezCandVoti[s.sezione] = s; });
+
+  buildCandidatiTotali();   // accumula totali per label nel select
 
   document.getElementById("loading").style.display = "none";
 
-  populateSelect();
-  buildMapFor(CAND_ORDER[0]);   // default: Piunti (vincitore)
+  populateListaSelect();
+
+  // default: lista 12 (Piunti Sindaco), prima candidata per voti
+  document.getElementById("sel-lista").value = 12;
+  populateCandSelect(12);
+  var nrcandi = parseInt(document.getElementById("sel-cand").value, 10);
+  buildMapFor(12, nrcandi);
 
 }).catch(function(e) {
-  document.getElementById("loading").textContent = "✗ Errore: " + e.message;
+  document.getElementById("loading").innerHTML = "✗ Errore: " + e.message;
 });
 
 </script>
