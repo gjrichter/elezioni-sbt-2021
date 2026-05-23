@@ -36,27 +36,18 @@
       color: #fff;
       cursor: pointer;
     }
-    .ctrl-select option, .ctrl-select optgroup {
-      background: #1a2a1a;
-      color: #fff;
-    }
-    #sel-lista   { min-width: 240px; }
-    #sel-cand    { min-width: 220px; }
-
-    #cand-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%; flex-shrink: 0;
-      display: none;
-    }
-    #cand-info {
-      font-size: 0.74rem;
-      opacity: 0.55;
-      white-space: nowrap;
-    }
+    .ctrl-select option, .ctrl-select optgroup { background: #1a2a1a; color: #fff; }
+    #sel-lista { min-width: 240px; }
+    #sel-cand  { min-width: 220px; }
+    #cand-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; display:none; }
+    #cand-info { font-size:0.74rem; opacity:0.55; white-space:nowrap; }
 
     /* ── MAP ── */
     #map-wrapper { flex: 1; position: relative; overflow: hidden; }
-    #loading {
+    #map { width: 100%; height: 100%; }
+
+    /* Note: DO NOT use id="loading" or id="loading-div" — ixmaps reserves those */
+    #app-loading {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       background: rgba(255,255,255,0.92);
@@ -81,14 +72,18 @@
   <select id="sel-lista" class="ctrl-select" onchange="onListaChange()"></select>
 
   <label for="sel-cand">Candidato:</label>
-  <select id="sel-cand" class="ctrl-select" onchange="onCandChange()"></select>
+  <select id="sel-cand"  class="ctrl-select" onchange="onCandChange()"></select>
 
   <div id="cand-dot"></div>
   <span id="cand-info"></span>
 </div>
 
 <div id="map-wrapper">
-  <div id="loading"><div class="spinner"></div> Caricamento dati (43 sezioni)…</div>
+  <div id="app-loading">
+    <div class="spinner"></div>
+    Caricamento dati (43 sezioni)…
+  </div>
+  <div id="map"></div>
 </div>
 
 <script>
@@ -146,7 +141,7 @@ var COALIZIONI = [
   }
 ];
 
-// flat lookup: nlista → { nome, color }
+// flat lookup: nlista → { nome, color, label }
 var LISTA_META = {};
 COALIZIONI.forEach(function(c) {
   c.liste.forEach(function(l) {
@@ -160,17 +155,17 @@ var DATA_BASE = "https://raw.githubusercontent.com/gjrichter/elezioni-sbt-2021/m
 var N_SEZ     = 43;
 
 // ── STATO GLOBALE ────────────────────────────────────────────────────────────
-var sediGj    = null;
-var mapSerial = 0;   // incrementato ad ogni rebuild → ID univoco per ixmaps
+var sediGj          = null;
+var sezCandVoti     = {};   // [sezione]["nlista_nrcandi"] = voti
+var candidatiMeta   = {};   // [nlista][nrcandi] = { nome, votiTotali }
 
-// sezCandVoti[sezione]["nlista_nrcandi"] = voti
-var sezCandVoti = {};
+// ixmaps: Map() restituisce una Promise — catturare con .then()
+// NEVER name the variable "map" — conflicts with ixmaps internals
+var myMap                = null;
+var ACTIVE_BUBBLE_THEME  = null;   // meta.name del bubble layer corrente
 
-// candidatiMeta[nlista][nrcandi] = { nome, votiTotali }
-var candidatiMeta = {};
-
-// ── CARICAMENTO ──────────────────────────────────────────────────────────────
-function loadSezioneCanditati(n) {
+// ── CARICA CANDIDATI PER SEZIONE ─────────────────────────────────────────────
+function loadSezioneCandidati(n) {
   var pad = String(n).padStart(3, "0");
   return fetch(DATA_BASE + pad + "/candidati.json")
     .then(function(r) { return r.json(); })
@@ -181,7 +176,7 @@ function loadSezioneCanditati(n) {
         Object.keys(arrV).forEach(function(nrcandi) {
           row[nlista + "_" + nrcandi] = arrV[nrcandi].voti || 0;
         });
-        // build candidatiMeta once (first sezione that has anagrafica)
+        // registra anagrafica (solo al primo incontro)
         if (!candidatiMeta[nlista]) {
           candidatiMeta[nlista] = {};
           (d[nlista].anagrafica || []).forEach(function(c) {
@@ -193,91 +188,85 @@ function loadSezioneCanditati(n) {
     });
 }
 
-// ── AGGREGA VOTI PER SEDE ─────────────────────────────────────────────────────
+// ── TOTALI CITYWIDE ───────────────────────────────────────────────────────────
+function buildCandidatiTotali() {
+  Object.keys(candidatiMeta).forEach(function(nlista) {
+    Object.keys(candidatiMeta[nlista]).forEach(function(nrcandi) {
+      var key = nlista + "_" + nrcandi;
+      var tot = 0;
+      for (var s = 1; s <= N_SEZ; s++) tot += (sezCandVoti[s] || {})[key] || 0;
+      candidatiMeta[nlista][nrcandi].votiTotali = tot;
+    });
+  });
+}
+
+// ── AGGREGA PER SEDE ──────────────────────────────────────────────────────────
 function computeSediData(nlista, nrcandi) {
   var key = nlista + "_" + nrcandi;
   return sediGj.features.map(function(feat) {
     var p = feat.properties;
     var v = 0;
-    for (var s = p.sez_da; s <= p.sez_a; s++) {
-      v += (sezCandVoti[s] || {})[key] || 0;
-    }
+    for (var s = p.sez_da; s <= p.sez_a; s++) v += (sezCandVoti[s] || {})[key] || 0;
     return { sez_da: p.sez_da, voti_cand: v };
   });
 }
 
-// ── COSTRUISCE / RICOSTRUISCE MAPPA ──────────────────────────────────────────
-function buildMapFor(nlista, nrcandi) {
+// ── AGGIORNA SOLO IL BUBBLE OVERLAY (mappa rimane viva) ───────────────────────
+// Pattern corretto ixmaps: removeTheme(prev) + layer().define()
+//   entrambi dentro la STESSA .then() callback → remove-before-add garantito
+function updateBubble(nlista, nrcandi) {
   var sediData = computeSediData(nlista, nrcandi);
   var maxVoti  = Math.max.apply(null, sediData.map(function(d) { return d.voti_cand || 0; }));
   var totalV   = sediData.reduce(function(s, d) { return s + (d.voti_cand || 0); }, 0);
   var meta     = LISTA_META[nlista] || {};
   var candName = (candidatiMeta[nlista] || {})[nrcandi]
-               ? candidatiMeta[nlista][nrcandi].nome
-               : "—";
+               ? candidatiMeta[nlista][nrcandi].nome : "—";
 
-  // info nella barra
+  // aggiorna barra info
   var dot = document.getElementById("cand-dot");
   dot.style.background = meta.color || "#888";
-  dot.style.display = "inline-block";
+  dot.style.display    = "inline-block";
   document.getElementById("cand-info").textContent =
-    totalV.toLocaleString("it-IT") + " voti totali  ·  " + meta.nome;
+    totalV.toLocaleString("it-IT") + " voti  ·  " + meta.nome;
 
-  // ixmaps tiene un registro interno per container-id:
-  // riusare lo stesso id causa conflitti sul secondo render.
-  // → svuotiamo il wrapper e usiamo un id univoco ad ogni chiamata.
-  var mapId = "ixmap_" + (++mapSerial);
-  document.getElementById("map-wrapper").innerHTML =
-    '<div id="' + mapId + '" style="width:100%;height:100%;"></div>';
+  var themeName = "bubble_" + nlista + "_" + nrcandi;
+  var prev      = ACTIVE_BUBBLE_THEME;
 
-  // ── ixMaps ────────────────────────────────────────────────────────────────
-  var myMap = ixmaps.Map(mapId, {
-    mapType: "VT_TONER_LITE",
-    mode:    "info",
-    legend:  "open",
-    tools:   true
-  })
-  .view({ center: { lat: 42.930, lng: 13.887 }, zoom: 13 })
-  .options({
-    objectscaling:   "dynamic",
-    normalSizeScale: "80000",
-    basemapopacity:  0.55,
-    flushChartDraw:  1000000
+  // removeTheme vive sull'Api (non sul MapBuilder shim) →
+  // usare myMap.then(api => ...) per raggiungerla
+  myMap.then(function(api) {
+    if (prev) {
+      try { api.removeTheme(prev); } catch(e) { /* theme già rimosso */ }
+    }
+
+    // layer() sul fluent chain di myMap, stesso nome "sedi" del FEATURE base
+    myMap.layer("sedi")
+      .data({ obj: sediData, type: "json" })
+      .binding({ geo: "sez_da", value: "voti_cand", size: "voti_cand" })
+      .type("CHART|BUBBLE|SIZE")
+      .style({
+        colorscheme:     [meta.color || "#888"],
+        normalsizevalue: String(Math.max(maxVoti, 1)),
+        scale:           1,
+        fillopacity:     0.75,
+        linecolor:       "#fff",
+        linewidth:       1,
+        showdata:        "true"
+      })
+      .meta({
+        name:    themeName,
+        title:   candName + " – " + meta.nome,
+        tooltip: "<b>{{nome}}</b><br>{{indirizzo}}<br>" +
+                 "Sezioni: {{sezioni}}<br>" +
+                 candName + ": <b>{{voti_cand}}</b> preferenze"
+      })
+      .define();
+
+    ACTIVE_BUBBLE_THEME = themeName;
   });
-
-  // Layer base FEATURE
-  myMap.layer("sedi")
-    .data({ obj: sediGj, type: "geojson" })
-    .binding({ geo: "geometry", id: "sez_da", title: "nome" })
-    .type("FEATURE|SILENT")
-    .style({ colorscheme: ["#ccc"], fillopacity: 0.1, showdata: "true" })
-    .define();
-
-  // Bubble: dimensione = voti del candidato aggregati per sede
-  myMap.layer("sedi")
-    .data({ obj: sediData, type: "json" })
-    .binding({ geo: "sez_da", value: "voti_cand", size: "voti_cand" })
-    .type("CHART|BUBBLE|SIZE")
-    .style({
-      colorscheme:     [meta.color || "#888"],
-      normalsizevalue: String(Math.max(maxVoti, 1)),
-      scale:           1,
-      fillopacity:     0.75,
-      linecolor:       "#fff",
-      linewidth:       1,
-      showdata:        "true"
-    })
-    .meta({
-      name:    "voti-pref-theme",
-      title:   candName + " – " + meta.nome,
-      tooltip: "<b>{{nome}}</b><br>{{indirizzo}}<br>" +
-               "Sezioni: {{sezioni}}<br>" +
-               candName + ": <b>{{voti_cand}}</b> preferenze"
-    })
-    .define();
 }
 
-// ── POPOLA SELECT LISTE ──────────────────────────────────────────────────────
+// ── SELECT LISTE ──────────────────────────────────────────────────────────────
 function populateListaSelect() {
   var sel = document.getElementById("sel-lista");
   sel.innerHTML = "";
@@ -294,79 +283,83 @@ function populateListaSelect() {
   });
 }
 
-// ── POPOLA SELECT CANDIDATI (per lista selezionata) ──────────────────────────
+// ── SELECT CANDIDATI (per lista selezionata) ──────────────────────────────────
 function populateCandSelect(nlista) {
   var sel  = document.getElementById("sel-cand");
   var meta = candidatiMeta[nlista] || {};
   sel.innerHTML = "";
-
-  // Ordina per voti totali desc
-  var cands = Object.keys(meta).map(function(nrcandi) {
-    return { nrcandi: parseInt(nrcandi, 10), nome: meta[nrcandi].nome,
-             voti: meta[nrcandi].votiTotali || 0 };
-  }).sort(function(a, b) {
-    return b.voti - a.voti || a.nrcandi - b.nrcandi;
-  });
-
-  cands.forEach(function(c) {
-    var opt = document.createElement("option");
-    opt.value       = c.nrcandi;
-    opt.textContent = c.nome + (c.voti > 0 ? "  (" + c.voti + ")" : "");
-    sel.appendChild(opt);
-  });
+  Object.keys(meta)
+    .map(function(nrcandi) {
+      return { nrcandi: parseInt(nrcandi, 10),
+               nome: meta[nrcandi].nome,
+               voti: meta[nrcandi].votiTotali || 0 };
+    })
+    .sort(function(a, b) { return b.voti - a.voti || a.nrcandi - b.nrcandi; })
+    .forEach(function(c) {
+      var opt = document.createElement("option");
+      opt.value       = c.nrcandi;
+      opt.textContent = c.nome + (c.voti > 0 ? "  (" + c.voti + ")" : "");
+      sel.appendChild(opt);
+    });
 }
 
 // ── HANDLERS ─────────────────────────────────────────────────────────────────
 function onListaChange() {
-  var nlista = parseInt(document.getElementById("sel-lista").value, 10);
+  var nlista  = parseInt(document.getElementById("sel-lista").value, 10);
   populateCandSelect(nlista);
-  var nrcandi = parseInt(document.getElementById("sel-cand").value, 10);
-  buildMapFor(nlista, nrcandi);
+  updateBubble(nlista, parseInt(document.getElementById("sel-cand").value, 10));
 }
 
 function onCandChange() {
-  var nlista  = parseInt(document.getElementById("sel-lista").value, 10);
-  var nrcandi = parseInt(document.getElementById("sel-cand").value, 10);
-  buildMapFor(nlista, nrcandi);
+  updateBubble(
+    parseInt(document.getElementById("sel-lista").value,  10),
+    parseInt(document.getElementById("sel-cand").value,   10)
+  );
 }
 
-// ── CALCOLA TOTALI CITYWIDE DA TUTTE LE SEZIONI ───────────────────────────────
-function buildCandidatiTotali() {
-  // somma i voti da sezCandVoti per ogni candidato
-  Object.keys(candidatiMeta).forEach(function(nlista) {
-    Object.keys(candidatiMeta[nlista]).forEach(function(nrcandi) {
-      var key = nlista + "_" + nrcandi;
-      var tot = 0;
-      for (var s = 1; s <= N_SEZ; s++) {
-        tot += (sezCandVoti[s] || {})[key] || 0;
-      }
-      candidatiMeta[nlista][nrcandi].votiTotali = tot;
-    });
-  });
-}
-
-// ── AVVIO ────────────────────────────────────────────────────────────────────
+// ── AVVIO: carica dati, poi inizializza la mappa UNA VOLTA ───────────────────
 var promises = [fetch(SEDI_URL).then(function(r) { return r.json(); })];
-for (var i = 1; i <= N_SEZ; i++) promises.push(loadSezioneCanditati(i));
+for (var i = 1; i <= N_SEZ; i++) promises.push(loadSezioneCandidati(i));
 
 Promise.all(promises).then(function(results) {
   sediGj = results[0];
   results.slice(1).forEach(function(s) { sezCandVoti[s.sezione] = s; });
+  buildCandidatiTotali();
 
-  buildCandidatiTotali();   // accumula totali per label nel select
+  document.getElementById("app-loading").style.display = "none";
 
-  document.getElementById("loading").style.display = "none";
+  // ── Crea la mappa UNA SOLA VOLTA ──────────────────────────────────────────
+  // ixmaps.Map() restituisce una Promise — salvare in myMap (mai "map")
+  myMap = ixmaps.Map("map", {
+    mapType: "VT_TONER_LITE",
+    mode:    "info",
+    legend:  "open",
+    tools:   true
+  })
+  .view({ center: { lat: 42.930, lng: 13.887 }, zoom: 13 })
+  .options({
+    objectscaling:   "dynamic",
+    normalSizeScale: "80000",
+    basemapopacity:  0.55,
+    flushChartDraw:  1000000
+  });
 
+  // ── Layer base FEATURE: definito UNA SOLA VOLTA, non viene mai rimosso ────
+  myMap.layer("sedi")
+    .data({ obj: sediGj, type: "geojson" })
+    .binding({ geo: "geometry", id: "sez_da", title: "nome" })
+    .type("FEATURE|SILENT")
+    .style({ colorscheme: ["#ccc"], fillopacity: 0.1, showdata: "true" })
+    .define();
+
+  // ── Popola i select e mostra il primo candidato ───────────────────────────
   populateListaSelect();
-
-  // default: lista 12 (Piunti Sindaco), prima candidata per voti
-  document.getElementById("sel-lista").value = 12;
+  document.getElementById("sel-lista").value = 12;   // default: Piunti Sindaco
   populateCandSelect(12);
-  var nrcandi = parseInt(document.getElementById("sel-cand").value, 10);
-  buildMapFor(12, nrcandi);
+  updateBubble(12, parseInt(document.getElementById("sel-cand").value, 10));
 
 }).catch(function(e) {
-  document.getElementById("loading").innerHTML = "✗ Errore: " + e.message;
+  document.getElementById("app-loading").innerHTML = "✗ Errore: " + e.message;
 });
 
 </script>
