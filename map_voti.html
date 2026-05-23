@@ -160,7 +160,8 @@ var DATA_BASE = "https://raw.githubusercontent.com/gjrichter/elezioni-sbt-2021/m
 var N_SEZ     = 43;
 
 // ── STATO GLOBALE ────────────────────────────────────────────────────────────
-var sediGj = null;
+var sediGj    = null;
+var mapSerial = 0;   // incrementato ad ogni rebuild → ID univoco per ixmaps
 
 // sezCandVoti[sezione]["nlista_nrcandi"] = voti
 var sezCandVoti = {};
@@ -222,17 +223,15 @@ function buildMapFor(nlista, nrcandi) {
   document.getElementById("cand-info").textContent =
     totalV.toLocaleString("it-IT") + " voti totali  ·  " + meta.nome;
 
-  // ricrea #map pulito
-  var wrapper = document.getElementById("map-wrapper");
-  var old = document.getElementById("map");
-  if (old) old.remove();
-  var mapDiv = document.createElement("div");
-  mapDiv.id = "map";
-  mapDiv.style.cssText = "width:100%;height:100%;";
-  wrapper.appendChild(mapDiv);
+  // ixmaps tiene un registro interno per container-id:
+  // riusare lo stesso id causa conflitti sul secondo render.
+  // → svuotiamo il wrapper e usiamo un id univoco ad ogni chiamata.
+  var mapId = "ixmap_" + (++mapSerial);
+  document.getElementById("map-wrapper").innerHTML =
+    '<div id="' + mapId + '" style="width:100%;height:100%;"></div>';
 
   // ── ixMaps ────────────────────────────────────────────────────────────────
-  var myMap = ixmaps.Map("map", {
+  var myMap = ixmaps.Map(mapId, {
     mapType: "VT_TONER_LITE",
     mode:    "info",
     legend:  "open",
