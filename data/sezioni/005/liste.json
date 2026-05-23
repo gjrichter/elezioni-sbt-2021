@@ -1,0 +1,388 @@
+{
+  "anagrafica": [
+    {
+      "idpartizione": 0,
+      "nlista": 1,
+      "nlistamacro": 1,
+      "idpartizione_r": 0,
+      "nraggrup": 1,
+      "nome": "CENTRO CIVICO POPOLARE",
+      "nome_breve": "CENTRO CIVICO POPOLARE",
+      "nome2": "CENTRO CIVICO POPOLARE",
+      "nome_breve2": "CENTRO CIVICO POPOLARE",
+      "immagine": "0_1.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 2,
+      "nlistamacro": 2,
+      "idpartizione_r": 0,
+      "nraggrup": 1,
+      "nome": "VIVA SAN BENEDETTO",
+      "nome_breve": "VIVA SAN BENEDETTO",
+      "nome2": "VIVA SAN BENEDETTO",
+      "nome_breve2": "VIVA SAN BENEDETTO",
+      "immagine": "0_2.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 3,
+      "nlistamacro": 3,
+      "idpartizione_r": 0,
+      "nraggrup": 1,
+      "nome": "RINASCITA SAMBENEDETTESE 0735",
+      "nome_breve": "RINASCITA SAMBENEDETTESE 0735",
+      "nome2": "RINASCITA SAMBENEDETTESE 0735",
+      "nome_breve2": "RINASCITA SAMBENEDETTESE 0735",
+      "immagine": "0_3.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 4,
+      "nlistamacro": 4,
+      "idpartizione_r": 0,
+      "nraggrup": 1,
+      "nome": "RIVOLUZIONE CIVICA",
+      "nome_breve": "RIVOLUZIONE CIVICA",
+      "nome2": "RIVOLUZIONE CIVICA",
+      "nome_breve2": "RIVOLUZIONE CIVICA",
+      "immagine": "0_4.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 5,
+      "nlistamacro": 5,
+      "idpartizione_r": 0,
+      "nraggrup": 1,
+      "nome": "LIBERA SAN BENEDETTO",
+      "nome_breve": "LIBERA SAN BENEDETTO",
+      "nome2": "LIBERA SAN BENEDETTO",
+      "nome_breve2": "LIBERA SAN BENEDETTO",
+      "immagine": "0_5.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 6,
+      "nlistamacro": 6,
+      "idpartizione_r": 0,
+      "nraggrup": 2,
+      "nome": "NOS- NUOVI ORIZZONTI SAMBENEDETTESI - BOTTIGLIERI SINDACA",
+      "nome_breve": "NOS- NUOVI ORIZZONTI SAMBENEDE",
+      "nome2": "NOS- NUOVI ORIZZONTI SAMBENEDETTESI - BOTTIGLIERI SINDACA",
+      "nome_breve2": "NOS- NUOVI ORIZZONTI SAMBENEDE",
+      "immagine": "0_6.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 7,
+      "nlistamacro": 7,
+      "idpartizione_r": 0,
+      "nraggrup": 2,
+      "nome": "ARTICOLO UNO E CIVICI PER AURORA BOTTIGLIERI SINDACA",
+      "nome_breve": "ARTICOLO UNO E CIVICI PER AURO",
+      "nome2": "ARTICOLO UNO E CIVICI PER AURORA BOTTIGLIERI SINDACA",
+      "nome_breve2": "ARTICOLO UNO E CIVICI PER AURO",
+      "immagine": "0_7.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 8,
+      "nlistamacro": 8,
+      "idpartizione_r": 0,
+      "nraggrup": 2,
+      "nome": "PARTITO DEMOCRATICO",
+      "nome_breve": "PARTITO DEMOCRATICO",
+      "nome2": "PARTITO DEMOCRATICO",
+      "nome_breve2": "PARTITO DEMOCRATICO",
+      "immagine": "0_8.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 9,
+      "nlistamacro": 9,
+      "idpartizione_r": 0,
+      "nraggrup": 3,
+      "nome": "EUROPA VERDE RINASCI SAN BENEDETTO",
+      "nome_breve": "EUROPA VERDE RINASCI SAN BENED",
+      "nome2": "EUROPA VERDE RINASCI SAN BENEDETTO",
+      "nome_breve2": "EUROPA VERDE RINASCI SAN BENED",
+      "immagine": "0_9.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 10,
+      "nlistamacro": 10,
+      "idpartizione_r": 0,
+      "nraggrup": 3,
+      "nome": "RIFORMISTI CANDUCCI SINDACO",
+      "nome_breve": "RIFORMISTI CANDUCCI SINDACO",
+      "nome2": "RIFORMISTI CANDUCCI SINDACO",
+      "nome_breve2": "RIFORMISTI CANDUCCI SINDACO",
+      "immagine": "0_10.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 11,
+      "nlistamacro": 11,
+      "idpartizione_r": 0,
+      "nraggrup": 3,
+      "nome": "DEMOCRATICI PER CANDUCCI",
+      "nome_breve": "DEMOCRATICI PER CANDUCCI",
+      "nome2": "DEMOCRATICI PER CANDUCCI",
+      "nome_breve2": "DEMOCRATICI PER CANDUCCI",
+      "immagine": "0_11.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 12,
+      "nlistamacro": 12,
+      "idpartizione_r": 0,
+      "nraggrup": 4,
+      "nome": "PIUNTI SINDACO",
+      "nome_breve": "PIUNTI SINDACO",
+      "nome2": "PIUNTI SINDACO",
+      "nome_breve2": "PIUNTI SINDACO",
+      "immagine": "0_12.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 13,
+      "nlistamacro": 13,
+      "idpartizione_r": 0,
+      "nraggrup": 4,
+      "nome": "NOI CON L'ITALIA - SAN BENEDETTO PER SAN BENEDETTO",
+      "nome_breve": "NOI CON L'ITALIA - SAN BEN",
+      "nome2": "NOI CON L'ITALIA - SAN BENEDETTO PER SAN BENEDETTO",
+      "nome_breve2": "NOI CON L'ITALIA - SAN BEN",
+      "immagine": "0_13.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 14,
+      "nlistamacro": 14,
+      "idpartizione_r": 0,
+      "nraggrup": 4,
+      "nome": "IL POPOLO DELLA FAMIGLIA",
+      "nome_breve": "IL POPOLO DELLA FAMIGLIA",
+      "nome2": "IL POPOLO DELLA FAMIGLIA",
+      "nome_breve2": "IL POPOLO DELLA FAMIGLIA",
+      "immagine": "0_14.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 15,
+      "nlistamacro": 15,
+      "idpartizione_r": 0,
+      "nraggrup": 4,
+      "nome": "LEGA",
+      "nome_breve": "LEGA",
+      "nome2": "LEGA",
+      "nome_breve2": "LEGA",
+      "immagine": "0_15.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 16,
+      "nlistamacro": 16,
+      "idpartizione_r": 0,
+      "nraggrup": 4,
+      "nome": "FORZA ITALIA",
+      "nome_breve": "FORZA ITALIA",
+      "nome2": "FORZA ITALIA",
+      "nome_breve2": "FORZA ITALIA",
+      "immagine": "0_16.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 17,
+      "nlistamacro": 17,
+      "idpartizione_r": 0,
+      "nraggrup": 4,
+      "nome": "FRATELLI D'ITALIA",
+      "nome_breve": "FRATELLI D'ITALIA",
+      "nome2": "FRATELLI D'ITALIA",
+      "nome_breve2": "FRATELLI D'ITALIA",
+      "immagine": "0_17.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 18,
+      "nlistamacro": 18,
+      "idpartizione_r": 0,
+      "nraggrup": 5,
+      "nome": "CAMBIA SBT CON ANGELINI",
+      "nome_breve": "CAMBIA SBT CON ANGELINI",
+      "nome2": "CAMBIA SBT CON ANGELINI",
+      "nome_breve2": "CAMBIA SBT CON ANGELINI",
+      "immagine": "0_18.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    },
+    {
+      "idpartizione": 0,
+      "nlista": 19,
+      "nlistamacro": 19,
+      "idpartizione_r": 0,
+      "nraggrup": 5,
+      "nome": "MOVIMENTO CINQUE STELLE 2050",
+      "nome_breve": "MOVIMENTO CINQUE STELLE 2050",
+      "nome2": "MOVIMENTO CINQUE STELLE 2050",
+      "nome_breve2": "MOVIMENTO CINQUE STELLE 2050",
+      "immagine": "0_19.png",
+      "tipo_lista": "N",
+      "blocco_ins": "N"
+    }
+  ],
+  "voti": {
+    "arrVotiListe": {
+      "1": {
+        "voti": 44,
+        "voti_nona": 0
+      },
+      "2": {
+        "voti": 18,
+        "voti_nona": 0
+      },
+      "3": {
+        "voti": 24,
+        "voti_nona": 0
+      },
+      "4": {
+        "voti": 18,
+        "voti_nona": 0
+      },
+      "5": {
+        "voti": 37,
+        "voti_nona": 0
+      },
+      "6": {
+        "voti": 20,
+        "voti_nona": 0
+      },
+      "7": {
+        "voti": 20,
+        "voti_nona": 0
+      },
+      "8": {
+        "voti": 30,
+        "voti_nona": 0
+      },
+      "9": {
+        "voti": 45,
+        "voti_nona": 0
+      },
+      "10": {
+        "voti": 26,
+        "voti_nona": 0
+      },
+      "11": {
+        "voti": 22,
+        "voti_nona": 0
+      },
+      "12": {
+        "voti": 59,
+        "voti_nona": 0
+      },
+      "13": {
+        "voti": 1,
+        "voti_nona": 0
+      },
+      "14": {
+        "voti": 1,
+        "voti_nona": 0
+      },
+      "15": {
+        "voti": 81,
+        "voti_nona": 0
+      },
+      "16": {
+        "voti": 68,
+        "voti_nona": 0
+      },
+      "17": {
+        "voti": 81,
+        "voti_nona": 0
+      },
+      "18": {
+        "voti": 15,
+        "voti_nona": 0
+      },
+      "19": {
+        "voti": 41,
+        "voti_nona": 0
+      }
+    },
+    "tot_sezio": 1,
+    "iscri_maschi": 594,
+    "iscri_femm": 616,
+    "iscri_totali": 1210,
+    "tvmas": 346,
+    "tvfem": 360,
+    "tvotanti": 706,
+    "tvotival": 651,
+    "tvnonass": 0,
+    "tbianche": 2,
+    "tnulle": 19,
+    "tvnulli": 0,
+    "sk_contestate": 0,
+    "solosindpres": 34,
+    "solosindpres_nona": 0,
+    "totale_parz": 21,
+    "totale_gen": 706
+  },
+  "ordinamento": [
+    15,
+    17,
+    16,
+    12,
+    9,
+    1,
+    19,
+    5,
+    8,
+    10,
+    3,
+    11,
+    6,
+    7,
+    2,
+    4,
+    18,
+    13,
+    14
+  ]
+}

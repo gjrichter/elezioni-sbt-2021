@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Voti per Candidato e Sede – SBdT 2021</title>
+  <script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/ixmaps.js"></script>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; font-family: sans-serif; }
+    #map { width: 100%; height: 100%; }
+    #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+               background: rgba(255,255,255,0.9); padding: 1em 2em; border-radius: 8px;
+               font-size: 1.1em; z-index: 9999; }
+  </style>
+</head>
+<body>
+<div id="loading">⟳ Caricamento risultati…</div>
+<div id="map"></div>
+<script>
+
+var SEDI_URL  = "https://raw.githubusercontent.com/gjrichter/elezioni-sbt-2021/main/data/sedi_sezioni_elettorali.geojson";
+var DATA_BASE = "https://raw.githubusercontent.com/gjrichter/elezioni-sbt-2021/main/data/sezioni/";
+var N_SEZ     = 43;
+
+// 1=Spazzafumo, 2=Bottiglieri, 3=Canducci, 4=Piunti, 5=Angelini
+var COLORS = ["#3498db", "#e74c3c", "#27ae60", "#f39c12", "#8e44ad"];
+
+function loadSezioneVoti(n) {
+  var pad = String(n).padStart(3, "0");
+  return fetch(DATA_BASE + pad + "/raggrup.json")
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var arr = (d.voti || {}).arrVotiRaggrup || {};
+      return {
+        sezione: n,
+        v1: (arr["1"] || {}).voti || 0,
+        v2: (arr["2"] || {}).voti || 0,
+        v3: (arr["3"] || {}).voti || 0,
+        v4: (arr["4"] || {}).voti || 0,
+        v5: (arr["5"] || {}).voti || 0
+      };
+    });
+}
+
+var promises = [fetch(SEDI_URL).then(function(r) { return r.json(); })];
+for (var i = 1; i <= N_SEZ; i++) promises.push(loadSezioneVoti(i));
+
+Promise.all(promises).then(function(results) {
+  var sediGj  = results[0];
+  var sezVoti = results.slice(1);
+
+  var votiIdx = {};
+  sezVoti.forEach(function(s) { votiIdx[s.sezione] = s; });
+
+  var sediData = sediGj.features.map(function(feat) {
+    var p = feat.properties;
+    var v1 = 0, v2 = 0, v3 = 0, v4 = 0, v5 = 0;
+    for (var s = p.sez_da; s <= p.sez_a; s++) {
+      var v = votiIdx[s] || {};
+      v1 += v.v1 || 0;
+      v2 += v.v2 || 0;
+      v3 += v.v3 || 0;
+      v4 += v.v4 || 0;
+      v5 += v.v5 || 0;
+    }
+    return {
+      sez_da:   p.sez_da,
+      voti_1:   v1,
+      voti_2:   v2,
+      voti_3:   v3,
+      voti_4:   v4,
+      voti_5:   v5,
+      tot_voti: v1 + v2 + v3 + v4 + v5
+    };
+  });
+
+  var maxVoti = Math.max.apply(null, sediData.map(function(d) { return d.tot_voti || 1; }));
+
+  document.getElementById("loading").style.display = "none";
+
+  var myMap = ixmaps.Map("map", {
+    mapType: "VT_TONER_LITE",
+    mode:    "info",
+    legend:  "open",
+    tools:   true
+  })
+  .view({ center: { lat: 42.930, lng: 13.887 }, zoom: 13 })
+  .options({
+    objectscaling:   "dynamic",
+    normalSizeScale: "80000",
+    basemapopacity:  0.55,
+    flushChartDraw:  1000000
+  });
+
+  // FEATURE base
+  myMap.layer("sedi")
+    .data({ obj: sediGj, type: "geojson" })
+    .binding({ geo: "geometry", id: "sez_da", title: "nome" })
+    .type("FEATURE|SILENT")
+    .style({ colorscheme: ["#ccc"], fillopacity: 0.1, showdata: "true" })
+    .define();
+
+  // Overlay voti assoluti
+  myMap.layer("sedi")
+    .data({ obj: sediData, type: "json" })
+    .binding({ lookup: "sez_da", value: "voti_1|voti_2|voti_3|voti_4|voti_5", title: "nome" })
+    .type("CHART|BAR|STACKED|SIZE|GRID|BOX|VALUES")
+    .style({
+      colorscheme:     COLORS,
+      normalsizevalue: String(Math.max(maxVoti, 1000)),
+      scale:           1,
+      fillopacity:     0.88,
+      gridx:           5,
+      showdata:        "true"
+    })
+    .meta({
+      name:    "voti-theme",
+      tooltip: "<b>{{nome}}</b><br>{{indirizzo}}<br>" +
+               "Sezioni: {{sezioni}}<br>" +
+               "Spazzafumo: <b>{{voti_1}}</b><br>" +
+               "Bottiglieri: <b>{{voti_2}}</b><br>" +
+               "Canducci: <b>{{voti_3}}</b><br>" +
+               "Piunti: <b>{{voti_4}}</b><br>" +
+               "Angelini: <b>{{voti_5}}</b><br>" +
+               "Totale: <b>{{tot_voti}}</b>"
+    })
+    .title("Voti per candidato 2021")
+    .define();
+
+}).catch(function(e) {
+  document.getElementById("loading").textContent = "✗ Errore: " + e.message;
+});
+
+</script>
+</body>
+</html>
